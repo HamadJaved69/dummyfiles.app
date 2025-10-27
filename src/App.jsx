@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import FileTypeSelector from './components/FileTypeSelector';
 import SizeSlider from './components/SizeSlider';
+import Loader from './components/Loader';
 import { generateZip } from './utils/fileGenerator';
 
 function App() {
@@ -12,6 +13,9 @@ function App() {
   const handleGenerate = async () => {
     setIsGenerating(true);
     setProgress(0);
+
+    // Allow React to render the loader before starting heavy computation
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
       const blob = await generateZip(fileType, fileSize, 1, setProgress);
@@ -75,20 +79,8 @@ function App() {
           {/* Size Slider */}
           <SizeSlider size={fileSize} onSizeChange={setFileSize} />
 
-          {/* Progress Bar */}
-          {isGenerating && (
-            <div className="mb-6">
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-                <div
-                  className="h-full bg-blue-600 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600 text-center">
-                Generating files... {progress}%
-              </p>
-            </div>
-          )}
+          {/* Loader */}
+          <Loader progress={progress} isVisible={isGenerating} />
 
           {/* Generate Button */}
           <button

@@ -54,7 +54,7 @@ export const generateDOCX = async (sizeKB) => {
 };
 
 // Generate CSV file
-export const generateCSV = (sizeKB) => {
+export const generateCSV = async (sizeKB) => {
   let csv = 'ID,Name,Email,Age,City,Country,Salary\n';
   const targetBytes = sizeKB * 1024;
 
@@ -63,21 +63,46 @@ export const generateCSV = (sizeKB) => {
     const row = `${id},User${id},user${id}@example.com,${20 + (id % 50)},City${id % 100},Country${id % 20},${30000 + (id * 100)}\n`;
     csv += row;
     id++;
+
+    // Yield to browser every 1000 rows to keep UI responsive
+    if (id % 1000 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
   }
 
   return new Blob([csv.substring(0, targetBytes)], { type: 'text/csv' });
 };
 
 // Generate JSON file
-export const generateJSON = (sizeKB) => {
+export const generateJSON = async (sizeKB) => {
   const records = [];
   const targetBytes = sizeKB * 1024;
-  let currentSize = 0;
   let id = 1;
 
-  while (currentSize < targetBytes) {
+  // Create a sample record to estimate size
+  const sampleRecord = {
+    id: 1,
+    name: `User 1`,
+    email: `user1@example.com`,
+    age: 20,
+    address: {
+      street: `1 Main Street`,
+      city: `City 1`,
+      country: `Country 1`,
+      zipCode: '10001',
+    },
+    createdAt: new Date().toISOString(),
+    active: true,
+  };
+
+  // Estimate size per record (with formatting)
+  const estimatedRecordSize = JSON.stringify(sampleRecord, null, 2).length + 3; // +3 for comma and newlines
+  const estimatedRecordCount = Math.floor(targetBytes / estimatedRecordSize);
+
+  // Generate records based on estimate
+  for (let i = 0; i < estimatedRecordCount; i++) {
     const record = {
-      id: id++,
+      id: id,
       name: `User ${id}`,
       email: `user${id}@example.com`,
       age: 20 + (id % 50),
@@ -91,15 +116,22 @@ export const generateJSON = (sizeKB) => {
       active: id % 2 === 0,
     };
     records.push(record);
-    currentSize = JSON.stringify(records).length;
+    id++;
+
+    // Yield to browser every 1000 records to keep UI responsive
+    if (i % 1000 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
   }
 
   return new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
 };
 
 // Generate TXT file
-export const generateTXT = (sizeKB) => {
+export const generateTXT = async (sizeKB) => {
   const text = generateRandomText(sizeKB);
+  // Small delay to ensure UI updates
+  await new Promise(resolve => setTimeout(resolve, 0));
   return new Blob([text], { type: 'text/plain' });
 };
 
