@@ -8,7 +8,6 @@ const sizeOptions = [
   { value: 5120, label: '5 MB' },
   { value: 10240, label: '10 MB' },
   { value: 20480, label: '20 MB' },
-  { value: 51200, label: '50 MB' },
 ];
 
 const SizeSlider = ({ size, onSizeChange }) => {

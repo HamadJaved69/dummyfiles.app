@@ -22,7 +22,7 @@ export const generatePDF = async (sizeKB) => {
   const lines = text.match(/.{1,80}/g) || [];
 
   let yPosition = 10;
-  lines.forEach((line, index) => {
+  lines.forEach((line) => {
     if (yPosition > 280) {
       doc.addPage();
       yPosition = 10;
@@ -36,12 +36,37 @@ export const generatePDF = async (sizeKB) => {
 
 // Generate DOCX file
 export const generateDOCX = async (sizeKB) => {
-  const text = generateRandomText(sizeKB);
-  const paragraphs = text.split('\n').map(line =>
-    new Paragraph({
-      children: [new TextRun(line || ' ')],
-    })
-  );
+  // For large files, create fewer, larger paragraphs for better performance
+  const targetBytes = sizeKB * 1024;
+  const paragraphs = [];
+
+  // Create paragraphs with ~5000 characters each (more efficient than many small ones)
+  const charsPerParagraph = 5000;
+  const estimatedParagraphCount = Math.ceil(targetBytes / charsPerParagraph);
+
+  // Generate text in chunks to avoid memory issues
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ';
+
+  for (let i = 0; i < estimatedParagraphCount; i++) {
+    // Generate a paragraph of text
+    let paragraphText = '';
+    const currentParagraphSize = Math.min(charsPerParagraph, targetBytes - (i * charsPerParagraph));
+
+    for (let j = 0; j < currentParagraphSize; j++) {
+      paragraphText += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    paragraphs.push(
+      new Paragraph({
+        children: [new TextRun(paragraphText)],
+      })
+    );
+
+    // Yield to browser every 50 paragraphs to keep UI responsive
+    if (i % 50 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
 
   const doc = new Document({
     sections: [{
